@@ -1,50 +1,45 @@
 package minesweeper;
 
 import java.util.Observer;
-import java.util.Vector;
 
-// javax.swing.UIManager.getDefaults().keys().asIterator().forEachRemaining(System.out::println);
+import minesweeper.controller.ControlListener;
+import minesweeper.controller.GameListener;
 
 @SuppressWarnings("deprecation")
 public class App {
     public static void main(String[] args) {
-        Vector<minesweeper.model.Game> games = new Vector<>();
-        // TODO: read list from file
+        var manager = new minesweeper.model.Manager();
 
-        minesweeper.controller.Event event = new minesweeper.controller.Event() {
+        ControlListener controlListener = new ControlListener() {
             @Override
-            public void onGameStarted(Observer observer) {
-                var game = new minesweeper.model.Game();
-                games.add(game);
-                game.addObserver(observer);
-                game.notifyObservers(minesweeper.model.Game.Result.New);
+            public void onGameStarted(Observer... observers) {
+                manager.startGame(observers);
             }
+        };
 
-            @Override
-            public void onGameTerminated() {
-                games.lastElement().terminate();
-                // TODO: save game data as terminated!
-            }
-
+        GameListener gameListener = new GameListener() {
             @Override
             public void onBlockRevealed(int x, int y) {
-                try {
-                    games.lastElement().revealBlock(x, y);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                manager.game().ifPresent(game -> game.revealBlock(x, y));
             }
 
             @Override
             public void onBlockFlagged(int x, int y) {
-                try {
-                    games.lastElement().flagBlock(x, y);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                manager.game().ifPresent(game -> game.flagBlock(x, y));
+            }
+
+            @Override
+            public void onGameTerminated() {
+                manager.game().ifPresent(minesweeper.model.Game::terminate);
             }
         };
 
-        new minesweeper.view.Minesweeper(event);
+        var game = new minesweeper.view.Game(gameListener);
+
+        minesweeper.view.Menu menu = new minesweeper.view.Menu(e -> controlListener.onGameStarted(game));
+
+        new minesweeper.view.Minesweeper(menu, game);
     }
 }
+
+// javax.swing.UIManager.getDefaults().keys().asIterator().forEachRemaining(System.out::println);

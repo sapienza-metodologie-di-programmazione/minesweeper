@@ -1,133 +1,170 @@
 package minesweeper.model;
 
-import java.awt.Point;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Observable;
+import java.util.Observer;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Stream;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
-// TODO: at least 10 mines, at most 20
+import static minesweeper.model.Block.Visibility.*;
+import static minesweeper.model.Block.Type.*;
 
 @SuppressWarnings("deprecation")
-public class Game extends Observable {
+public class Game extends Observable implements Serializable {
+
     public enum Result {
         Loss,
         Victory,
-        New,
         Terminated
     }
 
-    Block[] blocks;
-    int mines;
+    public enum Message {
+        Start,
+        Update,
+        Timer
+    }
 
-    public Game() {
+    Block[] blocks = new Block[100];
+    public final int mines;
+    Optional<Result> result = Optional.empty();
+
+    int time = 0;
+    ScheduledFuture<?> timer;
+
+    Game(Observer... observers) {
+
         Random random = new Random();
-
-        blocks = new Block[100];
-
         for (int y = 0; y < 10; y++)
-            for (int x = 0; x < 10; x++) {
-                Block.Type type = random.nextInt(100) >= 15 ? Block.Type.Safe : Block.Type.Mine;
-                blocks[y * 10 + x] = new Block(x, y, type);
-            }
+            for (int x = 0; x < 10; x++)
+                blocks[y * 10 + x] = new Block(x, y, random.nextInt(100) >= 15 ? Safe : Mine);
 
         mines = (int) Stream.of(blocks)
-                .map(block -> block.type)
-                .filter(type -> type == Block.Type.Mine)
+                .filter(block -> block.type == Mine)
                 .count();
 
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        timer = scheduler.scheduleAtFixedRate(() -> {
+            time++;
+            setChanged();
+            notifyObservers(Message.Timer);
+        }, 1, 1, TimeUnit.SECONDS);
+
+        Stream.of(observers).forEach(this::addObserver);
         setChanged();
+        notifyObservers(Message.Start);
     }
 
-    List<Block> neighbours(int x, int y) {
-        return List.of(
-                new Point(x - 1, y - 1),
-                new Point(x, y - 1),
-                new Point(x + 1, y - 1),
-                new Point(x - 1, y),
-                new Point(x + 1, y),
-                new Point(x - 1, y + 1),
-                new Point(x, y + 1),
-                new Point(x + 1, y + 1) //
-        )
-                .stream()
-                .filter(p -> p.x >= 0 && p.x < 10 && p.y >= 0 && p.y < 10)
-                .map(p -> blocks[p.y * 10 + p.x])
-                .toList();
-    }
+    void end(Result result) {
+        if (this.result.isPresent())
+            return;
 
-    public int neighbourMines(int x, int y) {
-        return (int) neighbours(x, y).stream().filter(block -> block.type == Block.Type.Mine).count();
-    }
-
-    public void terminate() {
+        timer.cancel(false);
         setChanged();
-        notifyObservers(Game.Result.Terminated);
+        notifyObservers((this.result = Optional.of(result)));
         deleteObservers();
     }
 
-    public void revealBlock(int x, int y) throws Exception {
-        if (x < 0 || x > 9 || y < 0 || y > 9)
-            throw new Exception("block is out of bounds");
+    public void terminate() {
+        end(Result.Terminated);
+    }
 
-        var block = blocks[y * 10 + x];
+    Stream<Block> neighbours(int x, int y) {
+        return List.of(
+                new Integer[] { x - 1, y - 1 },
+                new Integer[] { x, y - 1 },
+                new Integer[] { x + 1, y - 1 },
+                new Integer[] { x - 1, y },
+                new Integer[] { x + 1, y },
+                new Integer[] { x - 1, y + 1 },
+                new Integer[] { x, y + 1 },
+                new Integer[] { x + 1, y + 1 } //
+        )
+                .stream()
+                .filter(p -> p[0] >= 0 && p[0] < 10 && p[1] >= 0 && p[1] < 10)
+                .map(p -> blocks[p[0] * 10 + p[1]]);
+    }
 
-        if (block.state != Block.State.Hidden)
+    public int neighbourMines(int x, int y) {
+        return (int) neighbours(x, y)
+                .filter(block -> block.type == Mine)
+                .count();
+    }
+
+    public void revealBlock(int x, int y) {
+        if (result.isPresent())
             return;
 
-        block.state = Block.State.Revealed;
-        setChanged();
+        if (x < 0 || x > 9 || y < 0 || y > 9)
+            return;
 
-        if (block.type == Block.Type.Mine) {
-            notifyObservers(Result.Loss);
+        Block block = blocks[y * 10 + x];
+
+        if (block.visibility != Hidden)
+            return;
+
+        block.visibility = Revealed;
+
+        if (block.type == Mine) {
+            end(Result.Loss);
             return;
         }
 
         if (neighbourMines(x, y) == 0)
-            for (var neighbour : neighbours(x, y))
-                revealBlock(neighbour.x, neighbour.y);
+            neighbours(x, y).forEach(b -> revealBlock(b.x, b.y));
 
-        boolean victory = Stream.of(blocks)
-                .allMatch(b -> b.state == Block.State.Revealed || b.type == Block.Type.Mine)
-                ||
-                Stream.of(blocks)
-                        .allMatch(b -> b.state == Block.State.Flagged && b.type == Block.Type.Mine);
+        boolean safeRevealed = Stream.of(this.blocks)
+                .allMatch(b -> b.visibility == Revealed || b.type == Mine);
 
-        if (victory) {
-            notifyObservers(Result.Victory);
+        boolean minesFlagged = Stream.of(this.blocks)
+                .allMatch(b -> (b.type == Mine && b.visibility == Flagged)
+                        || (b.type == Safe && b.visibility != Flagged));
+
+        if (safeRevealed || minesFlagged) {
+            end(Result.Victory);
             return;
         }
 
-        notifyObservers();
+        setChanged();
+        notifyObservers(Message.Update);
     }
 
-    public void flagBlock(int x, int y) throws Exception {
-        if (x < 0 || x > 9 || y < 0 || y > 9)
-            throw new Exception("block is out of bounds");
-
-        var block = blocks[y * 10 + x];
-
-        if (block.state == Block.State.Revealed)
+    public void flagBlock(int x, int y) {
+        if (result.isPresent())
             return;
 
-        block.state = switch (block.state) {
-            case Hidden -> Block.State.Flagged;
-            case Flagged -> Block.State.Hidden;
-            default -> block.state;
+        if (x < 0 || x > 9 || y < 0 || y > 9)
+            return;
+
+        Block block = blocks[y * 10 + x];
+
+        if (block.visibility == Revealed)
+            return;
+
+        block.visibility = switch (block.visibility) {
+            case Hidden -> Flagged;
+            case Flagged -> Hidden;
+            default -> block.visibility;
         };
 
         setChanged();
-        notifyObservers();
-    }
-
-    public int mines() {
-        return mines;
+        notifyObservers(Message.Update);
     }
 
     public int flags() {
-        return (int) Stream.of(blocks).filter(block -> block.state == Block.State.Flagged).count();
+        return (int) Stream
+                .of(blocks)
+                .filter(block -> block.visibility == Flagged)
+                .count();
+    }
+
+    public int time() {
+        return time;
     }
 
     public Block[] blocks() {

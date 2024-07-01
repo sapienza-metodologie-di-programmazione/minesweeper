@@ -5,15 +5,23 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-public class Menu extends JPanel {
-    Menu(ActionListener onGameStarted) {
+@SuppressWarnings("deprecation")
+public class Menu extends JPanel implements Observer {
+    JLabel gamesPlayed, gamesWon;
+
+    public Menu(ActionListener onGameStarted) {
         setLayout(new GridBagLayout());
+
+        gamesPlayed = ComponentFactory.whiteLabel("games played: 0");
+        gamesWon = ComponentFactory.whiteLabel("games won: 0");
 
         add(new JPanel(new GridBagLayout()) {
             {
@@ -21,9 +29,6 @@ public class Menu extends JPanel {
 
                 constraints.weightx = 1;
                 constraints.weighty = 1;
-
-                constraints.gridx = 0;
-                constraints.gridy = 0;
                 constraints.insets.bottom = 20;
 
                 add(new JLabel("Minesweeper") {
@@ -40,29 +45,29 @@ public class Menu extends JPanel {
                     {
                         add(new JButton("Play") {
                             {
-                                addActionListener(onGameStarted);
+                                addActionListener(e -> {
+                                    onGameStarted.actionPerformed(e);
+                                    Navigator.getInstance().navigate(Screen.Game);
+                                });
                             }
                         });
 
-                        add(new JLabel("games played: 5") {
-                            {
-                                setHorizontalAlignment(SwingConstants.CENTER);
-                                setOpaque(true);
-                                setBorder(Minesweeper.BORDER);
-                            }
-                        });
+                        add(gamesPlayed);
+                        add(gamesWon);
 
-                        add(new JLabel("games won: 2") {
-                            {
-                                setHorizontalAlignment(SwingConstants.CENTER);
-                                setOpaque(true);
-                                setBorder(Minesweeper.BORDER);
-                            }
-                        });
                     }
                 }, constraints);
             }
         });
+    }
 
+    @Override
+    public void update(Observable o, Object arg) {
+        if (!(o instanceof minesweeper.model.Minesweeper))
+            return;
+
+        var model = (minesweeper.model.Minesweeper) o;
+        gamesPlayed.setText("games played: " + model.games());
+        gamesWon.setText("games won: " + model.vitories());
     }
 }

@@ -1,34 +1,31 @@
 package minesweeper.model;
 
-public class Block {
-    public final int x, y;
+import java.io.Serializable;
+
+public class Block implements Serializable {
 
     public enum Type {
         Mine,
         Safe
     }
 
-    public enum State {
+    public enum Visibility {
         Hidden,
         Revealed,
         Flagged
     }
 
-    Type type;
-    State state;
+    public final int x, y;
+    public final Type type;
+    Visibility visibility = Visibility.Hidden;
 
     Block(int x, int y, Type type) {
         this.x = x;
         this.y = y;
         this.type = type;
-        this.state = State.Hidden;
     }
 
-    public State state() {
-        return state;
-    }
-
-    public Type type() {
-        return type;
+    public Visibility visibility() {
+        return visibility;
     }
 }

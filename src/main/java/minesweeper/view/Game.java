@@ -16,27 +16,24 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.Timer;
 
+import minesweeper.model.Game.Message;
+import minesweeper.model.Game.Result;
+import minesweeper.controller.GameListener;
 import minesweeper.model.Block;
 
 @SuppressWarnings("deprecation")
 public class Game extends JPanel implements Observer {
     JLabel time, flags, mines;
-    JPanel deck;
 
-    Timer timer;
-    int gameTime;
-
+    GameListener gameListener;
+    // Block[] blocks;
     minesweeper.model.Game game;
 
-    Game(minesweeper.controller.Event event, JPanel deck) {
+    public Game(GameListener gameListener) {
         setLayout(new BorderLayout());
-        this.deck = deck;
-        timer = new Timer(1000, e -> {
-            gameTime++;
-            time.setText("time: " + gameTime + "s");
-        });
+
+        this.gameListener = gameListener;
 
         add(new JPanel(new GridBagLayout()) {
             {
@@ -67,8 +64,8 @@ public class Game extends JPanel implements Observer {
                 add(new JButton("end") {
                     {
                         addActionListener(e -> {
-                            event.onGameTerminated();
-                            Screen.show(deck, Screen.Menu);
+                            gameListener.onGameTerminated();
+                            Navigator.getInstance().navigate(Screen.Menu);
                         });
                     }
                 }, constraints);
@@ -78,7 +75,9 @@ public class Game extends JPanel implements Observer {
         class Canvas extends JPanel {
             Canvas() {
                 super(null);
+
                 var canvas = this;
+
                 addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
@@ -87,8 +86,8 @@ public class Game extends JPanel implements Observer {
                         int y = (e.getY() - canvas.getHeight() / 2 + 5 * 30) / 30;
 
                         switch (e.getButton()) {
-                            case MouseEvent.BUTTON1 -> event.onBlockRevealed(x, y);
-                            case MouseEvent.BUTTON3 -> event.onBlockFlagged(x, y);
+                            case MouseEvent.BUTTON1 -> gameListener.onBlockRevealed(x, y);
+                            case MouseEvent.BUTTON3 -> gameListener.onBlockFlagged(x, y);
                             default -> {
                             }
                         }
@@ -104,10 +103,10 @@ public class Game extends JPanel implements Observer {
                 g.translate(this.getWidth() / 2 - 5 * scale, this.getHeight() / 2 - 5 * scale);
                 for (var block : game.blocks()) {
                     g.setColor(
-                            switch (block.state()) {
+                            switch (block.visibility()) {
                                 case Flagged -> Color.RED;
                                 case Hidden -> Color.LIGHT_GRAY;
-                                case Revealed -> switch (block.type()) {
+                                case Revealed -> switch (block.type) {
                                     case Safe -> Color.CYAN;
                                     case Mine -> Color.MAGENTA;
                                 };
@@ -115,10 +114,11 @@ public class Game extends JPanel implements Observer {
 
                     g.fillRect(block.x * scale, block.y * scale, scale, scale);
 
-                    if (block.state() == Block.State.Revealed && block.type() == Block.Type.Safe) {
+                    if (block.visibility() == Block.Visibility.Revealed && block.type == Block.Type.Safe) {
                         int neighbourMines = game.neighbourMines(block.x, block.y);
 
                         if (neighbourMines > 0) {
+                            g.setFont(Minesweeper.FONT);
                             g.setColor(Color.BLACK);
                             g.drawString(String.valueOf(neighbourMines),
                                     block.x * scale + 10, block.y * scale + 20);
@@ -139,28 +139,32 @@ public class Game extends JPanel implements Observer {
         if (!(o instanceof minesweeper.model.Game))
             return;
 
-        if (arg instanceof minesweeper.model.Game.Result) {
-            switch ((minesweeper.model.Game.Result) arg) {
-                case Loss -> Screen.show(deck, Screen.Loss);
-                case Victory -> Screen.show(deck, Screen.Victory);
-                case Terminated -> Screen.show(deck, Screen.Menu);
-                case New -> {
-                    gameTime = 0;
-                    timer.start();
-                    game = (minesweeper.model.Game) o;
-                    time.setText("time: " + gameTime + "s");
+        minesweeper.model.Game game = (minesweeper.model.Game) o;
+
+        if (arg instanceof Result)
+            Navigator.getInstance().navigate(
+                    switch ((Result) arg) {
+                        case Loss -> Screen.Loss;
+                        case Victory -> Screen.Victory;
+                        case Terminated -> Screen.Menu;
+                    });
+
+        if (arg instanceof Message)
+            switch ((Message) arg) {
+                case Start -> {
                     flags.setText("flags: " + game.flags());
-                    mines.setText("mines: " + game.mines());
+                    mines.setText("mines: " + game.mines);
+                    time.setText("time: " + 0 + "s");
                     repaint();
                 }
+                case Update -> {
+                    flags.setText("flags: " + game.flags());
+                    mines.setText("mines: " + game.mines);
+                    repaint();
+                }
+                case Timer -> {
+                    time.setText("time: " + game.time() + "s");
+                }
             }
-
-            return;
-        }
-
-        flags.setText("flags: " + game.flags());
-        mines.setText("mines: " + game.mines());
-        repaint();
-
     }
 }
