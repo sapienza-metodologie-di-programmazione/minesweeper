@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import java.awt.event.ActionListener;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -13,15 +12,20 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
+import minesweeper.controller.Controller;
+
 @SuppressWarnings("deprecation")
 public class Menu extends JPanel implements Observer {
-    JLabel gamesPlayed, gamesWon;
 
-    public Menu(ActionListener onGameStarted) {
+    JLabel games, victories;
+
+    public Menu() {
         setLayout(new GridBagLayout());
 
-        gamesPlayed = ComponentFactory.whiteLabel("games played: 0");
-        gamesWon = ComponentFactory.whiteLabel("games won: 0");
+        games = ComponentFactory.whiteLabel("games played: " + Controller.getInstance().games());
+        victories = ComponentFactory.whiteLabel("games won: " + Controller.getInstance().victories());
+
+        Controller.getInstance().addObserver(this);
 
         add(new JPanel(new GridBagLayout()) {
             {
@@ -43,18 +47,15 @@ public class Menu extends JPanel implements Observer {
 
                 add(new JPanel(new GridLayout(3, 1, 10, 10)) {
                     {
-                        add(new JButton("Play") {
-                            {
-                                addActionListener(e -> {
-                                    onGameStarted.actionPerformed(e);
-                                    Navigator.getInstance().navigate(Screen.Game);
-                                });
-                            }
+                        JButton play = new JButton("Play");
+                        play.addActionListener(e -> {
+                            Controller.getInstance().startGame();
+                            Navigator.getInstance().navigate(Screen.Game);
                         });
 
-                        add(gamesPlayed);
-                        add(gamesWon);
-
+                        add(play);
+                        add(games);
+                        add(victories);
                     }
                 }, constraints);
             }
@@ -63,11 +64,15 @@ public class Menu extends JPanel implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        if (!(o instanceof minesweeper.model.Minesweeper))
-            return;
-
-        var model = (minesweeper.model.Minesweeper) o;
-        gamesPlayed.setText("games played: " + model.games());
-        gamesWon.setText("games won: " + model.vitories());
+        switch (o) {
+            case Controller controller -> {
+                if (arg instanceof Controller.Message) {
+                    games.setText("games played: " + controller.games());
+                    victories.setText("games won: " + controller.victories());
+                }
+            }
+            default -> {
+            }
+        }
     }
 }

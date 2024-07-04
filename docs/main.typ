@@ -39,7 +39,7 @@
 
 // = Data types specification 
 
-// #block(
+// #tile(
 //   inset: 5pt,
 //   [
 //     *Username*: *String* according to regex `[\w_][\w\d_]+`
@@ -67,10 +67,10 @@
   [
     $forall$ game\
     #t Victory(game) <=> \
-    #t#t $forall$ block _mine_game_(block, game) #[==>] Flagged(block) $and$ \
-    #t#t $not$ $exists$ block _block_game_(block, game) $and$ Safe(block) $and$ Flagged(block) \
+    #t#t $forall$ tile _mine_game_(tile, game) #[==>] Flagged(tile) $and$ \
+    #t#t $not$ $exists$ tile _tile_game_(tile, game) $and$ Empty(tile) $and$ Flagged(tile) \
     #t#t $or$ \
-    #t#t $forall$ block (_block_game_(block, game) $and$ Safe(block) #[==>] Revealed(block)) \
+    #t#t $forall$ tile (_tile_game_(tile, game) $and$ Empty(tile) #[==>] Revealed(tile)) \
   ]
 ) 
 
@@ -87,13 +87,13 @@
   [
     $forall$ g1, g2 \
     #t Game(g1) $and$ Game(g2) $and$ g1 != g2 ==> \ 
-    #t#t Over(g1) $or$ Over(g2)
+    #t#t Ended(g1) $or$ Over(g2)
   ]
 )
 
 #operation(
   [mines],
-  type: [(10..30)],
+  type: [(0..100)],
   post: [
     result = |{ mine | _mine_game_(mine, this) }|
   ]
@@ -101,63 +101,63 @@
 
 #operation(
   [flags],
-  type: [*Integer* >= 0],
+  type: [(0..100)],
   post: [
-    result = |{ flag | _block_game_(flag, this) $and$ Flag(block) }|
+    result = |{ flag | _tile_game_(flag, this) $and$ Flag(tile) }|
   ]
 )
 
 #pagebreak()
 
-= *Block* class specification
+= *Tile* class specification
 
 #operation(
-  [is_neighbour],
-  args: [block: *Block*],
+  [is_adjacent],
+  args: [tile: *Tile*],
   type: [*Boolean*],
   post: [
     result = True <=> $exists$ game, x, y \
-    #t _block_game_(this, game) $and$ \
-    #t _block_game_(block, game) $and$ \
+    #t _tile_game_(this, game) $and$ \
+    #t _tile_game_(tile, game) $and$ \
     #t x(this, x) $and$ \
     #t y(this, y) $and$ \
     #t (\
-    #t#t (x(block, x - 1) $and$ y(block, y - 1)) $or$ \
-    #t#t (x(block, x ) $and$ y(block, y - 1)) $or$ \
-    #t#t (x(block, x + 1) $and$ y(block, y - 1)) $or$ \
-    #t#t (x(block, x - 1) $and$ y(block, y + 1)) $or$ \
-    #t#t (x(block, x ) $and$ y(block, y + 1)) $or$ \
-    #t#t (x(block, x + 1) $and$ y(block, y + 1)) $or$ \
-    #t#t (x(block, x - 1) $and$ y(block, y)) $or$ \
-    #t#t (x(block, x + 1) $and$ y(block, y)) $or$ \
+    #t#t (x(tile, x - 1) $and$ y(tile, y - 1)) $or$ \
+    #t#t (x(tile, x ) $and$ y(tile, y - 1)) $or$ \
+    #t#t (x(tile, x + 1) $and$ y(tile, y - 1)) $or$ \
+    #t#t (x(tile, x - 1) $and$ y(tile, y + 1)) $or$ \
+    #t#t (x(tile, x ) $and$ y(tile, y + 1)) $or$ \
+    #t#t (x(tile, x + 1) $and$ y(tile, y + 1)) $or$ \
+    #t#t (x(tile, x - 1) $and$ y(tile, y)) $or$ \
+    #t#t (x(tile, x + 1) $and$ y(tile, y)) $or$ \
     #t ) \
   ]
 )
 
-= *Safe* class specification
+= *Empty* class specification
 
 #constraint(
-  [*Safe*._revealed_empty_block_reveals_neighbours_],
+  [*Empty*._revealed_empty_tile_reveals_adjacents_],
   [
-    $forall$ safe, game, neighbour \
-    #t _block_game_(safe, game) $and$ \
-    #t Safe(safe) $and$ \
+    $forall$ safe, game, adjacent \
+    #t _tile_game_(safe, game) $and$ \
+    #t Empty(safe) $and$ \
     #t Revealed(safe) $and$ \
-    #t *is_neighbour*#sub[*Block*, *Block*, *Boolean*]\(safe, neighbour, True) $and$ \
-    #t *neighbour_mines*#sub[*Safe*, (0..8)]\(safe, 0) ==> \
-    #t#t Revealed(neighbour)
+    #t *is_adjacent*#sub[*Tile*, *Tile*, *Boolean*]\(safe, adjacent, True) $and$ \
+    #t *adjacent_mines*#sub[*Empty*, (0..8)]\(safe, 0) ==> \
+    #t#t Revealed(adjacent)
   ]
 )
 
 
 #operation(
-  [neighbour_mines],
+  [adjacent_mines],
   type: [(0..8)],
   post: [
     result = |{ mine | $exists$ game \
-    #t _block_game_(this, game) $and$ \
+    #t _tile_game_(this, game) $and$ \
     #t _mine_game_(mine, game) $and$ \
-    #t *is_neighbour*#sub[*Block*, *Block*, *Boolean*]\(this, mine, True) \
+    #t *is_adjacent*#sub[*Tile*, *Tile*, *Boolean*]\(this, mine, True) \
     }| \
   ]
 )
@@ -174,7 +174,7 @@
   [start_game],
   type: [*Game*],
   pre: [
-    $not$ $exists$ game Game(game) $and$ $not$ Over(game)
+    $not$ $exists$ game Game(game) $and$ $not$ Ended(game)
   ],
 )
 
@@ -183,34 +183,34 @@
   args: [game: *Game*],
   type: [*Terminated*],
   pre: [
-    $not$ Over(game)
+    $not$ Ended(game)
   ],
 )
 
 #operation(
   [reveal],
-  args: [block: *Hidden*],
+  args: [tile: *Hidden*],
   type: [*Revealed*],
   pre: [
-    $exists$ game _block_game_(block, game) ==> $not$ Over(game)
+    $exists$ game _tile_game_(tile, game) ==> $not$ Ended(game)
   ]
 )
 
 #operation(
   [flag],
-  args: [block: *Hidden*],
+  args: [tile: *Hidden*],
   type: [*Flagged*],
   pre: [
-    $exists$ game _block_game_(block, game) ==> $not$ Over(game)
+    $exists$ game _tile_game_(tile, game) ==> $not$ Ended(game)
   ]
 )
 
 #operation(
   [remove_flag],
-  args: [block: *Flagged*],
+  args: [tile: *Flagged*],
   type: [*Hidden*],
   pre: [
-    $exists$ game _block_game_(block, game) ==> $not$ Over(game) 
+    $exists$ game _tile_game_(tile, game) ==> $not$ Ended(game) 
   ]
 )
 

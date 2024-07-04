@@ -1,7 +1,8 @@
 package minesweeper.view;
 
+import static minesweeper.model.Tile.Visibility.*;
+
 import java.awt.BorderLayout;
-import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
@@ -11,29 +12,28 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import minesweeper.model.Game.Message;
+import minesweeper.controller.Controller;
 import minesweeper.model.Game.Result;
-import minesweeper.controller.GameListener;
-import minesweeper.model.Block;
+import minesweeper.model.Tile;
 
 @SuppressWarnings("deprecation")
 public class Game extends JPanel implements Observer {
+
     JLabel time, flags, mines;
 
-    GameListener gameListener;
-    // Block[] blocks;
-    minesweeper.model.Game game;
+    Optional<minesweeper.model.Game> game = Optional.empty();
 
-    public Game(GameListener gameListener) {
+    public Game() {
         setLayout(new BorderLayout());
-
-        this.gameListener = gameListener;
+        Controller.getInstance().addObserver(this);
 
         add(new JPanel(new GridBagLayout()) {
             {
@@ -47,8 +47,8 @@ public class Game extends JPanel implements Observer {
                 add(new JPanel(new GridLayout(1, 3, 10, 10)) {
                     {
                         add(time = ComponentFactory.whiteLabel("time: 0s"));
-                        add(mines = ComponentFactory.whiteLabel("mines: 0s"));
-                        add(flags = ComponentFactory.whiteLabel("flags: 0s"));
+                        add(mines = ComponentFactory.whiteLabel("mines: 0"));
+                        add(flags = ComponentFactory.whiteLabel("flags: 0"));
                     }
                 }, constraints);
 
@@ -64,7 +64,7 @@ public class Game extends JPanel implements Observer {
                 add(new JButton("end") {
                     {
                         addActionListener(e -> {
-                            gameListener.onGameTerminated();
+                            Controller.getInstance().endGame();
                             Navigator.getInstance().navigate(Screen.Menu);
                         });
                     }
@@ -73,24 +73,25 @@ public class Game extends JPanel implements Observer {
         }, BorderLayout.NORTH);
 
         class Canvas extends JPanel {
-            Canvas() {
-                super(null);
+            static int SIZE = 30;
 
+            Canvas() {
                 var canvas = this;
 
                 addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        int scale = 30;
-                        int x = (e.getX() - canvas.getWidth() / 2 + 5 * 30) / 30;
-                        int y = (e.getY() - canvas.getHeight() / 2 + 5 * 30) / 30;
+                        game.ifPresent(game -> {
+                            int x = (e.getX() - canvas.getWidth() / 2 + 5 * SIZE) / 30;
+                            int y = (e.getY() - canvas.getHeight() / 2 + 5 * SIZE) / 30;
 
-                        switch (e.getButton()) {
-                            case MouseEvent.BUTTON1 -> gameListener.onBlockRevealed(x, y);
-                            case MouseEvent.BUTTON3 -> gameListener.onBlockFlagged(x, y);
-                            default -> {
+                            switch (e.getButton()) {
+                                case MouseEvent.BUTTON1 -> game.tiles[y * 10 + x].reveal();
+                                case MouseEvent.BUTTON3 -> game.tiles[y * 10 + x].flag();
+                                default -> {
+                                }
                             }
-                        }
+                        });
                     }
                 });
             }
@@ -99,35 +100,32 @@ public class Game extends JPanel implements Observer {
             public void paint(Graphics g) {
                 super.paint(g);
 
-                int scale = 30;
-                g.translate(this.getWidth() / 2 - 5 * scale, this.getHeight() / 2 - 5 * scale);
-                for (var block : game.blocks()) {
-                    g.setColor(
-                            switch (block.visibility()) {
-                                case Flagged -> Color.RED;
-                                case Hidden -> Color.LIGHT_GRAY;
-                                case Revealed -> switch (block.type) {
-                                    case Safe -> Color.CYAN;
-                                    case Mine -> Color.MAGENTA;
-                                };
+                game.ifPresent(game -> {
+                    g.translate(this.getWidth() / 2 - 5 * SIZE, this.getHeight() / 2 - 5 * SIZE);
+
+                    for (Tile tile : game.tiles) {
+                        g.setColor(switch (tile.visibility()) {
+                            case Flagged -> Color.RED;
+                            case Hidden -> Color.LIGHT_GRAY;
+                            case Revealed -> switch (tile.kind) {
+                                case Empty -> Color.CYAN;
+                                case Mine -> Color.MAGENTA;
+                            };
+                        });
+
+                        g.fillRect(tile.x * SIZE, tile.y * SIZE, SIZE, SIZE);
+
+                        if (tile.visibility() == Revealed)
+                            tile.adjacentMines().ifPresent(mines -> {
+                                g.setFont(Minesweeper.FONT);
+                                g.setColor(Color.BLACK);
+                                g.drawString(mines.toString(), tile.x * SIZE + 10, tile.y * SIZE + 20);
                             });
 
-                    g.fillRect(block.x * scale, block.y * scale, scale, scale);
-
-                    if (block.visibility() == Block.Visibility.Revealed && block.type == Block.Type.Safe) {
-                        int neighbourMines = game.neighbourMines(block.x, block.y);
-
-                        if (neighbourMines > 0) {
-                            g.setFont(Minesweeper.FONT);
-                            g.setColor(Color.BLACK);
-                            g.drawString(String.valueOf(neighbourMines),
-                                    block.x * scale + 10, block.y * scale + 20);
-                        }
+                        g.setColor(Color.BLACK);
+                        g.drawRect(tile.x * SIZE, tile.y * SIZE, SIZE, SIZE);
                     }
-
-                    g.setColor(Color.BLACK);
-                    g.drawRect(block.x * scale, block.y * scale, scale, scale);
-                }
+                });
             }
         }
 
@@ -136,35 +134,56 @@ public class Game extends JPanel implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        if (!(o instanceof minesweeper.model.Game))
-            return;
+        switch (o) {
+            case Controller controller -> {
+                if (arg instanceof minesweeper.model.Game) {
+                    minesweeper.model.Game game = (minesweeper.model.Game) arg;
+                    game.addObserver(this);
+                    Stream.of(game.tiles).forEach(t -> t.addObserver(this));
 
-        minesweeper.model.Game game = (minesweeper.model.Game) o;
-
-        if (arg instanceof Result)
-            Navigator.getInstance().navigate(
-                    switch ((Result) arg) {
-                        case Loss -> Screen.Loss;
-                        case Victory -> Screen.Victory;
-                        case Terminated -> Screen.Menu;
-                    });
-
-        if (arg instanceof Message)
-            switch ((Message) arg) {
-                case Start -> {
-                    flags.setText("flags: " + game.flags());
                     mines.setText("mines: " + game.mines);
-                    time.setText("time: " + 0 + "s");
-                    repaint();
-                }
-                case Update -> {
                     flags.setText("flags: " + game.flags());
-                    mines.setText("mines: " + game.mines);
+                    time.setText("time: " + game.time().toSeconds() + "s");
+
+                    this.game = Optional.of(game);
                     repaint();
-                }
-                case Timer -> {
-                    time.setText("time: " + game.time() + "s");
                 }
             }
+            case minesweeper.model.Game game -> {
+                switch (arg) {
+                    case Result result ->
+                        Navigator.getInstance().navigate(switch (result) {
+                            case Loss -> Screen.Loss;
+                            case Victory -> Screen.Victory;
+                            case Terminated -> Screen.Menu;
+                        });
+                    case minesweeper.model.Game.Message message -> {
+                        switch (message) {
+                            case Timer -> {
+                                time.setText("time: " + game.time().toSeconds() + "s");
+                                repaint();
+                            }
+                        }
+                    }
+                    default -> {
+                    }
+                }
+            }
+            case Tile tile -> {
+                switch (arg) {
+                    case Tile.Visibility visibility -> {
+                        if (visibility != Revealed)
+                            game.ifPresent(game -> flags.setText("flags: " + game.flags()));
+
+                        repaint();
+                    }
+                    default -> {
+                    }
+                }
+            }
+            default -> {
+            }
+        }
     }
+
 }

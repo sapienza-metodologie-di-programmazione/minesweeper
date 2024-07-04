@@ -2,21 +2,15 @@ package minesweeper.view;
 
 import java.util.Observable;
 
-enum Screen {
-    Menu,
-    Game,
-    Loss,
-    Victory;
-}
-
 @SuppressWarnings("deprecation")
-public class Navigator extends Observable {
+class Navigator extends Observable {
+
     static Navigator instance = new Navigator();
 
     private Navigator() {
     }
 
-    public static Navigator getInstance() {
+    static Navigator getInstance() {
         return instance;
     }
 
@@ -24,4 +18,12 @@ public class Navigator extends Observable {
         setChanged();
         notifyObservers(screen);
     }
+
+}
+
+enum Screen {
+    Menu,
+    Game,
+    Loss,
+    Victory;
 }
