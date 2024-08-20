@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.time.Duration;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Optional;
@@ -27,13 +28,16 @@ import minesweeper.model.Tile;
 @SuppressWarnings("deprecation")
 public class Game extends JPanel implements Observer {
 
-    JLabel time, flags, mines;
+    private JLabel time, flags, mines;
+    private Navigator navigator;
 
     Optional<minesweeper.model.Game> game = Optional.empty();
 
-    public Game() {
+    public Game(Controller controller, Navigator navigator) {
         setLayout(new BorderLayout());
-        Controller.getInstance().addObserver(this);
+
+        controller.addObserver(this);
+        this.navigator = navigator;
 
         add(new JPanel(new GridBagLayout()) {
             {
@@ -46,9 +50,9 @@ public class Game extends JPanel implements Observer {
 
                 add(new JPanel(new GridLayout(1, 3, 10, 10)) {
                     {
-                        add(time = ComponentFactory.whiteLabel("time: 0s"));
-                        add(mines = ComponentFactory.whiteLabel("mines: 0"));
-                        add(flags = ComponentFactory.whiteLabel("flags: 0"));
+                        add(time = Factory.label("time: 0s"));
+                        add(mines = Factory.label("mines: 0"));
+                        add(flags = Factory.label("flags: 0"));
                     }
                 }, constraints);
 
@@ -64,8 +68,8 @@ public class Game extends JPanel implements Observer {
                 add(new JButton("end") {
                     {
                         addActionListener(e -> {
-                            Controller.getInstance().endGame();
-                            Navigator.getInstance().navigate(Screen.Menu);
+                            controller.endGame();
+                            navigator.navigate(Screen.Menu);
                         });
                     }
                 }, constraints);
@@ -76,7 +80,7 @@ public class Game extends JPanel implements Observer {
             static int SIZE = 30;
 
             Canvas() {
-                var canvas = this;
+                Canvas canvas = this;
 
                 addMouseListener(new MouseAdapter() {
                     @Override
@@ -86,8 +90,8 @@ public class Game extends JPanel implements Observer {
                             int y = (e.getY() - canvas.getHeight() / 2 + 5 * SIZE) / 30;
 
                             switch (e.getButton()) {
-                                case MouseEvent.BUTTON1 -> game.tiles[y * 10 + x].reveal();
-                                case MouseEvent.BUTTON3 -> game.tiles[y * 10 + x].flag();
+                                case MouseEvent.BUTTON1 -> controller.reveal(x, y);
+                                case MouseEvent.BUTTON3 -> controller.flag(x, y);
                                 default -> {
                                 }
                             }
@@ -136,8 +140,7 @@ public class Game extends JPanel implements Observer {
     public void update(Observable o, Object arg) {
         switch (o) {
             case Controller controller -> {
-                if (arg instanceof minesweeper.model.Game) {
-                    minesweeper.model.Game game = (minesweeper.model.Game) arg;
+                if (arg instanceof minesweeper.model.Game game) {
                     game.addObserver(this);
                     Stream.of(game.tiles).forEach(t -> t.addObserver(this));
 
@@ -150,35 +153,24 @@ public class Game extends JPanel implements Observer {
                 }
             }
             case minesweeper.model.Game game -> {
-                switch (arg) {
-                    case Result result ->
-                        Navigator.getInstance().navigate(switch (result) {
-                            case Loss -> Screen.Loss;
-                            case Victory -> Screen.Victory;
-                            case Terminated -> Screen.Menu;
-                        });
-                    case minesweeper.model.Game.Message message -> {
-                        switch (message) {
-                            case Timer -> {
-                                time.setText("time: " + game.time().toSeconds() + "s");
-                                repaint();
-                            }
-                        }
-                    }
-                    default -> {
-                    }
+                if (arg instanceof Result result)
+                    navigator.navigate(switch (result) {
+                        case Loss -> Screen.Loss;
+                        case Victory -> Screen.Victory;
+                        case Terminated -> Screen.Menu;
+                    });
+
+                if (arg instanceof Duration duration) {
+                    time.setText("time: " + duration.toSeconds() + "s");
+                    repaint();
                 }
             }
             case Tile tile -> {
-                switch (arg) {
-                    case Tile.Visibility visibility -> {
-                        if (visibility != Revealed)
-                            game.ifPresent(game -> flags.setText("flags: " + game.flags()));
+                if (arg instanceof Tile.Visibility visibility) {
+                    if (visibility != Revealed)
+                        game.ifPresent(game -> flags.setText("flags: " + game.flags()));
 
-                        repaint();
-                    }
-                    default -> {
-                    }
+                    repaint();
                 }
             }
             default -> {
@@ -187,3 +179,39 @@ public class Game extends JPanel implements Observer {
     }
 
 }
+
+// switch (arg) {
+// case Result result ->
+// case minesweeper.model.Game.Message message -> {
+// switch (message) {
+// case Timer -> {
+// time.setText("time: " + game.time().toSeconds() + "s");
+// repaint();
+// }
+// }
+// }
+// default -> {
+// time.setText("time: " + game.time().toSeconds() + "s");
+// repaint();
+// }
+
+// switch (arg) {
+// case Tile.Visibility visibility -> {
+// if (visibility != Revealed)
+// game.ifPresent(game -> flags.setText("flags: " + game.flags()));
+//
+// repaint();
+// }
+// default -> {
+// }
+// }
+
+// Controller.getInstance().addObserver(this);
+
+// case MouseEvent.BUTTON1 -> game.tiles[y * 10 + x].reveal();
+// case MouseEvent.BUTTON3 -> game.tiles[y * 10 + x].flag();
+
+// Navigator.getInstance().navigate(switch (result) {
+
+// Controller.getInstance().endGame();
+// Navigator.getInstance().navigate(Screen.Menu);

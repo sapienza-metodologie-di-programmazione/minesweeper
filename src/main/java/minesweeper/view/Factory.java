@@ -7,23 +7,23 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 
-final class ComponentFactory {
-    private ComponentFactory() {
+final class Factory {
+    private Factory() {
     }
 
-    static Border simpleBorder(Color color) {
+    static Border border(Color color) {
         return BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(color),
                 BorderFactory.createEmptyBorder(10, 15, 10, 15));
     }
 
-    static JLabel whiteLabel(String text) {
+    static JLabel label(String text) {
         return new JLabel(text) {
             {
                 setHorizontalAlignment(SwingConstants.CENTER);
                 setOpaque(true);
                 setBackground(Color.WHITE);
-                setBorder(ComponentFactory.simpleBorder(Color.BLACK));
+                setBorder(Factory.border(Color.BLACK));
             }
         };
     }

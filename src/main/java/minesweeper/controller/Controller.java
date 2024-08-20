@@ -23,14 +23,13 @@ public class Controller extends Observable implements Observer {
     }
 
     static final String FILE = "games.db";
-    static Controller instance = new Controller();
 
     Optional<Game> game;
     int games, victories;
     Optional<ScheduledFuture<?>> timer;
     ScheduledExecutorService scheduler;
 
-    private Controller() {
+    public Controller() {
         scheduler = Executors.newScheduledThreadPool(1);
 
         try {
@@ -46,10 +45,6 @@ public class Controller extends Observable implements Observer {
             games = 0;
             victories = 0;
         }
-    }
-
-    public static Controller getInstance() {
-        return instance;
     }
 
     public void startGame() {
@@ -69,6 +64,14 @@ public class Controller extends Observable implements Observer {
         game = Optional.empty();
     }
 
+    public void reveal(int x, int y) {
+        game.ifPresent(game -> game.tiles[y * 10 + x].reveal());
+    }
+
+    public void flag(int x, int y) {
+        game.ifPresent(game -> game.tiles[y * 10 + x].flag());
+    }
+
     public int games() {
         return games;
     }
@@ -79,36 +82,56 @@ public class Controller extends Observable implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        switch (o) {
-            case Game game -> {
-                switch (arg) {
-                    case Game.Result result -> {
-                        games++;
+        if (o instanceof Game && arg instanceof Game.Result result) {
+            games++;
 
-                        if (result == Game.Result.Victory)
-                            victories++;
+            if (result == Game.Result.Victory)
+                victories++;
 
-                        try {
-                            ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(FILE));
+            try {
+                ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(FILE));
 
-                            stream.writeObject(games);
-                            stream.writeObject(victories);
+                stream.writeObject(games);
+                stream.writeObject(victories);
 
-                            stream.close();
-                        } catch (IOException e) {
-                        }
-
-                        setChanged();
-                        notifyObservers(Message.Save);
-                    }
-                    default -> {
-                    }
-                }
+                stream.close();
+            } catch (IOException e) {
             }
-            default -> {
-            }
+
+            setChanged();
+            notifyObservers(Message.Save);
         }
-
     }
 
 }
+
+// switch (o) {
+// case Game game -> {
+// switch (arg) {
+// case Game.Result result -> {
+// games++;
+//
+// if (result == Game.Result.Victory)
+// victories++;
+//
+// try {
+// ObjectOutputStream stream = new ObjectOutputStream(new
+// FileOutputStream(FILE));
+//
+// stream.writeObject(games);
+// stream.writeObject(victories);
+//
+// stream.close();
+// } catch (IOException e) {
+// }
+//
+// setChanged();
+// notifyObservers(Message.Save);
+// }
+// default -> {
+// }
+// }
+// }
+// default -> {
+// }
+// }

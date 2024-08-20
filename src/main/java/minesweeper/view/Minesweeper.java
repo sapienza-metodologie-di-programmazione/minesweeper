@@ -14,6 +14,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
+import minesweeper.controller.Controller;
+
 @SuppressWarnings("deprecation")
 public class Minesweeper extends JFrame implements Observer {
     static Font FONT = new Font("Cascadia Code", Font.PLAIN, 14);
@@ -25,7 +27,7 @@ public class Minesweeper extends JFrame implements Observer {
         UIManager.put("Label.background", Color.WHITE);
 
         UIManager.put("Button.font", FONT);
-        UIManager.put("Button.border", ComponentFactory.simpleBorder(new Color(224, 49, 49)));
+        UIManager.put("Button.border", Factory.border(new Color(224, 49, 49)));
 
         UIManager.put("Button.foreground", new Color(224, 49, 49));
         UIManager.put("Button.background", new Color(255, 201, 201));
@@ -39,32 +41,29 @@ public class Minesweeper extends JFrame implements Observer {
 
     JPanel deck;
 
-    public Minesweeper() {
+    public Minesweeper(Controller controller) {
         super("Minesweeper");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        Navigator.getInstance().addObserver(this);
-
         try {
             setIconImage(ImageIO.read(new URL(LOGO)));
         } catch (Exception e) {
         }
 
+        Navigator navigator = new Navigator();
+        navigator.addObserver(this);
+
         add(deck = new JPanel(new CardLayout()) {
             {
-                add(new Menu(), Screen.Menu.name());
+                add(new Menu(controller, navigator), Screen.Menu.name());
 
-                add(new Game(), Screen.Game.name());
+                add(new Game(controller, navigator), Screen.Game.name());
 
                 add(new JPanel(new GridBagLayout()) {
                     {
                         setBackground(new Color(255, 201, 201));
-
-                        add(new JButton("Game Over") {
-                            {
-                                addActionListener(e -> Navigator.getInstance().navigate(Screen.Menu));
-                            }
-                        });
+                        JButton gameOver = new JButton("Game Over");
+                        gameOver.addActionListener(e -> navigator.navigate(Screen.Menu));
+                        add(gameOver);
                     }
                 }, Screen.Loss.name());
 
@@ -76,9 +75,9 @@ public class Minesweeper extends JFrame implements Observer {
                             {
                                 setForeground(new Color(47, 158, 68));
                                 setBackground(new Color(178, 242, 187));
-                                setBorder(ComponentFactory.simpleBorder(new Color(47, 158, 68)));
+                                setBorder(Factory.border(new Color(47, 158, 68)));
 
-                                addActionListener(e -> Navigator.getInstance().navigate(Screen.Menu));
+                                addActionListener(e -> navigator.navigate(Screen.Menu));
                             }
                         });
                     }
@@ -93,7 +92,27 @@ public class Minesweeper extends JFrame implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        if (o instanceof Navigator && arg instanceof Screen)
-            ((CardLayout) deck.getLayout()).show(deck, ((Screen) arg).name());
+        if (o instanceof Navigator && arg instanceof Screen screen)
+            ((CardLayout) deck.getLayout()).show(deck, screen.name());
     }
 }
+
+// add(new JButton("Game Over") {
+// {
+// addActionListener(e -> navigator.navigate(Screen.Menu));
+// }
+// });
+
+// Navigator navigator = Navigator.getInstance();
+// Navigator.getInstance().addObserver(this);
+
+// JButton gameOver = new JButton("Game Over");
+// gameOver.addActionListener(e -> navigator.navigate(Screen.Menu));
+// add(gameOver);
+
+// switch (arg) {
+// case Screen screen -> ((CardLayout) deck.getLayout()).show(deck,
+// screen.name());
+// default -> {
+// }
+// }

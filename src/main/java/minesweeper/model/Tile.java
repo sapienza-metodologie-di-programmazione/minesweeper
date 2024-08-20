@@ -23,7 +23,7 @@ public class Tile extends Observable {
 
     public final int x, y;
     public final Kind kind;
-    Visibility visibility = Visibility.Hidden;
+    private Visibility visibility = Visibility.Hidden;
     Optional<Integer> adjacentMines = Optional.empty();
 
     Tile(int x, int y, Kind kind) {
@@ -44,14 +44,12 @@ public class Tile extends Observable {
         if (visibility != Hidden)
             return;
 
-        visibility = Revealed;
-
         setChanged();
-        notifyObservers(Revealed);
+        notifyObservers(visibility = Revealed);
     }
 
     public void flag() {
-        visibility = switch (visibility) {
+        notifyObservers(visibility = switch (visibility) {
             case Hidden -> {
                 setChanged();
                 yield Flagged;
@@ -61,9 +59,24 @@ public class Tile extends Observable {
                 yield Hidden;
             }
             case Revealed -> Revealed;
-        };
-
-        notifyObservers(visibility);
+        });
     }
 
 }
+
+// visibility = switch (visibility) {
+// case Hidden -> {
+// setChanged();
+// yield Flagged;
+// }
+// case Flagged -> {
+// setChanged();
+// yield Hidden;
+// }
+// case Revealed -> Revealed;
+// };
+
+// notifyObservers(visibility);
+
+// notifyObservers(Revealed);
+// notifyObservers(visibility);

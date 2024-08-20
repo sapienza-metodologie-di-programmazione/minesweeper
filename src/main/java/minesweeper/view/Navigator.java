@@ -4,21 +4,15 @@ import java.util.Observable;
 
 @SuppressWarnings("deprecation")
 class Navigator extends Observable {
-
-    static Navigator instance = new Navigator();
-
-    private Navigator() {
-    }
-
-    static Navigator getInstance() {
-        return instance;
-    }
+    Screen screen = Screen.Menu;
 
     void navigate(Screen screen) {
-        setChanged();
-        notifyObservers(screen);
-    }
+        if (this.screen == screen)
+            return;
 
+        setChanged();
+        notifyObservers(this.screen = screen);
+    }
 }
 
 enum Screen {
@@ -27,3 +21,14 @@ enum Screen {
     Loss,
     Victory;
 }
+
+// static Navigator instance;
+
+// private Navigator() {
+// }
+
+// static Navigator getInstance() {
+// if (instance == null)
+// instance = new Navigator();
+// return instance;
+// }
