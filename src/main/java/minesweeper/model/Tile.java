@@ -1,8 +1,6 @@
 package minesweeper.model;
 
-import static minesweeper.model.Tile.Visibility.Flagged;
-import static minesweeper.model.Tile.Visibility.Hidden;
-import static minesweeper.model.Tile.Visibility.Revealed;
+import static minesweeper.model.Tile.Visibility.*;
 
 import java.util.Observable;
 import java.util.Optional;
@@ -10,26 +8,19 @@ import java.util.Optional;
 @SuppressWarnings("deprecation")
 public class Tile extends Observable {
 
-    public enum Kind {
-        Mine,
-        Empty
-    }
-
     public enum Visibility {
-        Hidden,
-        Flagged,
-        Revealed
+        Hidden, Flagged, Revealed
     }
 
     public final int x, y;
-    public final Kind kind;
-    private Visibility visibility = Visibility.Hidden;
+    public final boolean isMine;
+    private Visibility visibility = Hidden;
     Optional<Integer> adjacentMines = Optional.empty();
 
-    Tile(int x, int y, Kind kind) {
+    Tile(int x, int y, boolean isMine) {
         this.x = x;
         this.y = y;
-        this.kind = kind;
+        this.isMine = isMine;
     }
 
     public Visibility visibility() {
@@ -49,34 +40,24 @@ public class Tile extends Observable {
     }
 
     public void flag() {
+        setChanged();
         notifyObservers(visibility = switch (visibility) {
-            case Hidden -> {
-                setChanged();
-                yield Flagged;
+            case Hidden -> Flagged;
+            case Flagged -> Hidden;
+            case Revealed -> {
+                clearChanged();
+                yield Revealed;
             }
-            case Flagged -> {
-                setChanged();
-                yield Hidden;
-            }
-            case Revealed -> Revealed;
         });
     }
 
 }
 
-// visibility = switch (visibility) {
-// case Hidden -> {
-// setChanged();
-// yield Flagged;
+// public enum Kind {
+// Mine,
+// Empty
 // }
-// case Flagged -> {
-// setChanged();
-// yield Hidden;
-// }
-// case Revealed -> Revealed;
-// };
 
-// notifyObservers(visibility);
-
-// notifyObservers(Revealed);
-// notifyObservers(visibility);
+// public final Kind kind;
+// Tile(int x, int y, Kind kind) {
+// this.kind = kind;

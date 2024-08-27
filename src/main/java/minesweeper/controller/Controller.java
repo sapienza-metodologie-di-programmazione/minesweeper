@@ -1,12 +1,8 @@
 package minesweeper.controller;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Observable;
-import java.util.Observer;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.Console;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,123 +11,56 @@ import java.util.concurrent.TimeUnit;
 
 import minesweeper.model.Game;
 
+import minesweeper.view.Canvas;
+
 @SuppressWarnings("deprecation")
-public class Controller extends Observable implements Observer {
+public class Controller {
+    private Optional<ScheduledFuture<?>> timer;
+    private ScheduledExecutorService scheduler;
+    private Optional<Game> game;
 
-    public enum Message {
-        Save
-    }
-
-    static final String FILE = "games.db";
-
-    Optional<Game> game;
-    int games, victories;
-    Optional<ScheduledFuture<?>> timer;
-    ScheduledExecutorService scheduler;
-
-    public Controller() {
+    public Controller(minesweeper.model.Minesweeper model, minesweeper.view.Minesweeper view) {
         scheduler = Executors.newScheduledThreadPool(1);
+        model.addObserver(view.menu());
 
-        try {
-            ObjectInputStream stream = new ObjectInputStream(new FileInputStream(FILE));
+        view.menu().play().addActionListener(e -> {
+            Game game = new Game();
+            game.addObserver(model);
+            game.addObserver(view.game());
+            game.addObserver(view.game().canvas());
+            game.start();
 
-            Integer games = (Integer) stream.readObject();
-            Integer victories = (Integer) stream.readObject();
-            this.games = games;
-            this.victories = victories;
+            this.game = Optional.of(game);
+            timer = Optional.of(scheduler.scheduleAtFixedRate(() -> game.update(), 1, 1, TimeUnit.SECONDS));
+        });
 
-            stream.close();
-        } catch (IOException | ClassNotFoundException e) {
-            games = 0;
-            victories = 0;
-        }
-    }
+        view.game().end().addActionListener(e -> {
+            timer.ifPresent(t -> t.cancel(true));
+            game.ifPresent(Game::end);
+        });
 
-    public void startGame() {
-        Game game = new Game();
-        this.game = Optional.of(game);
-        game.addObserver(this);
+        view.game().canvas().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                game.ifPresent(game -> {
+                    Canvas canvas = view.game().canvas();
 
-        setChanged();
-        notifyObservers(game);
+                    int x = (e.getX() - canvas.getWidth() / 2 + 5 * Canvas.SCALE) / 30;
+                    int y = (e.getY() - canvas.getHeight() / 2 + 5 * Canvas.SCALE) / 30;
 
-        timer = Optional.of(scheduler.scheduleAtFixedRate(() -> game.updateTime(), 1, 1, TimeUnit.SECONDS));
-    }
-
-    public void endGame() {
-        timer.ifPresent(timer -> timer.cancel(true));
-        game.ifPresent(Game::end);
-        game = Optional.empty();
-    }
-
-    public void reveal(int x, int y) {
-        game.ifPresent(game -> game.tiles[y * 10 + x].reveal());
-    }
-
-    public void flag(int x, int y) {
-        game.ifPresent(game -> game.tiles[y * 10 + x].flag());
-    }
-
-    public int games() {
-        return games;
-    }
-
-    public int victories() {
-        return victories;
-    }
-
-    @Override
-    public void update(Observable o, Object arg) {
-        if (o instanceof Game && arg instanceof Game.Result result) {
-            games++;
-
-            if (result == Game.Result.Victory)
-                victories++;
-
-            try {
-                ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(FILE));
-
-                stream.writeObject(games);
-                stream.writeObject(victories);
-
-                stream.close();
-            } catch (IOException e) {
+                    switch (e.getButton()) {
+                        case MouseEvent.BUTTON1 -> game.tiles[y * 10 + x].reveal();
+                        case MouseEvent.BUTTON3 -> game.tiles[y * 10 + x].flag();
+                        default -> {
+                        }
+                    }
+                });
             }
-
-            setChanged();
-            notifyObservers(Message.Save);
-        }
+        });
     }
 
 }
 
-// switch (o) {
-// case Game game -> {
-// switch (arg) {
-// case Game.Result result -> {
-// games++;
-//
-// if (result == Game.Result.Victory)
-// victories++;
-//
-// try {
-// ObjectOutputStream stream = new ObjectOutputStream(new
-// FileOutputStream(FILE));
-//
-// stream.writeObject(games);
-// stream.writeObject(victories);
-//
-// stream.close();
-// } catch (IOException e) {
-// }
-//
-// setChanged();
-// notifyObservers(Message.Save);
-// }
-// default -> {
-// }
-// }
-// }
-// default -> {
-// }
-// }
+// minesweeper.model.Game game = model.newGame();
+// view.game().canvas().game = Optional.of(game);
+// view.game().canvas().game = Optional.empty();

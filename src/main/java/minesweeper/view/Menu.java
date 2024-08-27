@@ -12,16 +12,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-import minesweeper.controller.Controller;
-
 @SuppressWarnings("deprecation")
 public class Menu extends JPanel implements Observer {
 
     JLabel games, victories;
+    JButton play;
 
-    public Menu(Controller controller, Navigator navigator) {
+    public Menu(Navigator navigator) {
         super(new GridBagLayout());
-        controller.addObserver(this);
 
         add(new JPanel(new GridBagLayout()) {
             {
@@ -43,59 +41,30 @@ public class Menu extends JPanel implements Observer {
 
                 add(new JPanel(new GridLayout(3, 1, 10, 10)) {
                     {
-                        add(new JButton("Play") {
+                        add(play = new JButton("Play") {
                             {
-                                addActionListener(e -> {
-                                    controller.startGame();
-                                    navigator.navigate(Screen.Game);
-                                });
+                                addActionListener(e -> navigator.navigate(Screen.Game));
                             }
                         });
 
-                        add(games = Factory.label("games played: " + controller.games()));
-                        add(victories = Factory.label("games won: " + controller.victories()));
+                        add(games = Factory.label("games played: 0"));
+                        add(victories = Factory.label("games won: 0"));
                     }
                 }, constraints);
             }
         });
     }
 
+    public JButton play() {
+        return play;
+    }
+
     @Override
     public void update(Observable o, Object arg) {
-        if (o instanceof Controller controller && arg instanceof Controller.Message) {
-            games.setText("games played: " + controller.games());
-            victories.setText("games won: " + controller.victories());
+        if (o instanceof minesweeper.model.Minesweeper minesweeper) {
+            games.setText("games played: " + minesweeper.games());
+            victories.setText("games won: " + minesweeper.victories());
         }
     }
 
 }
-
-// games = Factory.label("games played: " + controller.games());
-// victories = Factory.label("games won: " + controller.victories());
-
-// TODO: controller and navigator?
-// Controller.getInstance().addObserver(this);
-
-// Controller.getInstance().startGame();
-// Navigator.getInstance().navigate(Screen.Game);
-
-// if () {
-// }
-// switch (o) {
-// case Controller controller -> {
-// if (arg instanceof Controller.Message) {
-// games.setText("games played: " + controller.games());
-// victories.setText("games won: " + controller.victories());
-// }
-// }
-// default -> {
-// }
-// }
-
-// JButton play = new JButton("Play");
-// play.addActionListener(e -> {
-// controller.startGame();
-// navigator.navigate(Screen.Game);
-// });
-//
-// add(play);

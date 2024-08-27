@@ -12,8 +12,7 @@ final class Factory {
     }
 
     static Border border(Color color) {
-        return BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(color),
+        return BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(color),
                 BorderFactory.createEmptyBorder(10, 15, 10, 15));
     }
 
