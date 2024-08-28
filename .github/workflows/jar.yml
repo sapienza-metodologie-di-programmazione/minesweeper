@@ -9,17 +9,15 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+
+      - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          architecture: x64
 
-      # - name: Build jar
-      #   run: |
-      #     javac -sourcepath ./src/ -d ./target/ ./src/Main.java
-      #     jar cfe JBomberMan.jar Main ./target/*.class 
+      - run: mvn install
 
       - name:
         uses: marvinpinto/action-automatic-releases@latest
@@ -27,9 +25,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           automatic_release_tag: 'latest'
           prerelease: false
-          files: |
-            LICENSE.txt
-            *.jar         
+          files: target/*.jar         
 
       - uses: dev-drprasad/delete-older-releases@v0.3.3
         with:
@@ -45,3 +41,9 @@ jobs:
 #       - main
 #       
 #   workflow_dispatch:
+#
+      # - name: Build jar
+      #   run: |
+      #     javac -sourcepath ./src/ -d ./target/ ./src/Main.java
+      #     jar cfe JBomberMan.jar Main ./target/*.class 
+
