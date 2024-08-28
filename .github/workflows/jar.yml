@@ -17,7 +17,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - run: mvn install
+      - run: mvn clean compile assembly:single
 
       - name:
         uses: marvinpinto/action-automatic-releases@latest
@@ -34,16 +34,3 @@ jobs:
           delete_tag_pattern: latest 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-# on:
-#   push: 
-#     branches: 
-#       - main
-#       
-#   workflow_dispatch:
-#
-      # - name: Build jar
-      #   run: |
-      #     javac -sourcepath ./src/ -d ./target/ ./src/Main.java
-      #     jar cfe JBomberMan.jar Main ./target/*.class 
-
