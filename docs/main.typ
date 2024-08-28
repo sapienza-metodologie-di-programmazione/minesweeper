@@ -1,9 +1,6 @@
 #import "logic.typ": *
 
-// TODO: forchette
-// #set text(10pt, font: "CaskaydiaCove NF")
 #set text(10pt, font: "Cascadia Code")
-// #show math.equation: set text(font: "CaskaydiaCove NF")
 #set page(margin: 1.5cm)
 
 #align(center, text(17pt)[ *Minesweeper* 💣 ])
@@ -21,7 +18,6 @@
 #outline(title: [Table of contents], indent: 1.5em)
 
 #show regex("[[:^alpha:]]\d+"): set text(rgb("#4caf50"))
-// #show regex("[\*\d]+"): set text(rgb("#4caf50"))
 #show regex("[()\[\]:,\.\{\}|]"): set text(rgb("#4caf50"))
 #show regex("[a-zA-Zàèìù]+\("): set text(blue)
 #show regex("this|result|auth|adesso|old|new"): set text(blue)
@@ -36,15 +32,6 @@
     image("Minesweeper.png", width: 100%)
   )
 ]
-
-// = Data types specification 
-
-// #tile(
-//   inset: 5pt,
-//   [
-//     *Username*: *String* according to regex `[\w_][\w\d_]+`
-//   ]
-// )
 
 = *Game* class specification
 
@@ -166,10 +153,6 @@
 
 = #text(weight: "extrabold")[Use Case]
 
-// == *Play* use case specification
-
-// #let mantra = [Let *user* be the instance of *User* associated with the invoking actor] 
-
 #operation(
   [start_game],
   type: [*Game*],
@@ -239,117 +222,3 @@
     image("wireframe.png", width: 89%)
   )
 ]
-
-// holy nation
-
-
-// // #image("Use Case RistoBook.png", width: 100%)
-
-// #pagebreak()
-
-// = Specifica use case *Cucine*
-
-// #signature([inserisci_cucina], args: [nome: *Stringa*], type: [*Cucina*])
-// #signature([elenca_cucine], type: [*Cucina* [0..\*]])
-
-// = Specifica use case *Ristorante*
-
-// #signature(
-//   [registra_ristorante],
-//   args: [nome: *Stringa*, partitaIVA: *PartitaIVA*, indirizzo: *Indirizzo*, città: *Città*, cucine: *Cucina* [1..\*]],
-//   type: [*Ristorante*]
-// )
-
-// = Specifica use case *Promozioni*
-
-// #signature(
-//   [inserisci_promozione],
-//   args: [sconto: *Sconto*, max_coperti: *Intero* > 0 [0..1], fasce: *FasciaOraria* [1..\*]],
-//   type: [*Promozione*]
-// )
-
-// = Specifica use case *Chiusure*
-
-// #signature([inserisci_chiusura], args: [fascia: *FasciaOraria*])
-// #signature([riapri_chiusura], args: [fascia: *FasciaOraria*])
-
-// = Specifica use case *Gestione prenotazioni*
-
-// #signature([conferma], args: [prenotazione: *Prenotazione*], type: [*Confermata*])
-// #signature([rifiuta], args: [prenotazione: *Prenotazione*], type: [*Rifiutata*])
-// #signature([completa], args: [confermata: *Confermata*], type: [*Completata*])
-// #signature([non_usata], args: [confermata: *Confermata*], type: [*NonUsata*])
-
-// = Specifica use case *Effettuazione prenotazioni*
-
-// #signature(
-//   [prenota], 
-//   args: [orario: *DataOra*, commensali: *Intero* > 0, ristorante: *Ristorante*, promozione: *Promozione* [0..1]],
-//   type: [*Prenotazione*]
-// )
-// #signature(
-//   [annulla],
-//   args: [prenotazione: *Prenotazione*],
-//   type: [*Annullata*]
-// )
-
-// #pagebreak()
-
-// = Specifica use case *Statistiche*
-
-// #operation(
-//   [utilizzo_promozioni],
-//   args: [dal: *Data*, al: *Data*],
-//   type: [(*Promozione*, *Reale* >= 0)],
-//   post: [
-//     result = { ($psi$, $mu$) | \
-//     #t Promozione($psi$) $and$ \
-//     #t T = {($delta$, prenotazioni) | $exists$ $phi$, i, $delta_i$, f, $delta_f$ \
-//     #t#t Data($delta$) $and$ \
-//     #t#t dal <= $delta$ <= al $and$ \
-//     #t#t fasce($psi$, $phi$) $and$ \
-//     #t#t inizio($phi$, i) $and$ \
-//     #t#t data(inizio, $delta_i$) $and$ \
-//     #t#t fine($phi$, f) $and$ \
-//     #t#t data(fine, $delta_f$) $and$ \
-//     #t#t $delta_i$ <= $delta$ <= $delta_f$ \
-//     #t#t prenotazioni = |{ p | $exists$ o \
-//     #t#t#t _prenotazione_promozione_(p, $psi$) $and$ \
-//     #t#t#t orario(p, o) $and$ \
-//     #t#t#t i <= o <= f \
-//     #t#t }| \
-//     #t} \
-
-//     #t |T| > 0 ==> $mu$ = $(sum_((\_, p) in T) p) / (|T|)$ $and$\
-//     #t |T| = 0 ==> $mu$ = 0 \
-//     }
-//   ]
-
-// )
-
-// = Specifica use case *Ricerca ristoranti*
-
-// #operation(
-//   [ricerca_ristoranti],
-//   args: [x: *Città*, C: *Cucina* [1..\*], s: *Sconto*, $delta$: *Data*, coperti: *Intero* > 0],
-//   type: [*Ristorante* [0..\*]],
-//   post: [
-//     result = { ristorante | \
-//     #t _città_ristorante_(x, ristorante) $and$ \
-//     #t $exists$ $psi$, $phi$, m, i, $delta_i$, f, $delta_f$ \
-//     #t#t _promozione_ristorante_($psi$, r) $and$ \
-//     #t#t fasce($psi$, $phi$) $ and$ \
-//     #t#t inizio($phi$, i) $and$ \
-//     #t#t data(i, $delta_i$) $and$ \
-//     #t#t fine($phi$, f) $and$ \
-//     #t#t data(f, $delta_f$) $and$ \
-//     #t#t $delta_i$ <= $delta$ <= $delta_f$ $and$ \
-//     \
-//     #t#t *max_coperti*($psi$, m) $and$ \
-//     #t#t Sia P = {(p, c) |  _prenotazione_promozione_(p, $psi$) $and$ commensali(p, c)} \
-//     #t#t m - $sum$#sub(typographic: false, size: 1em, baseline: 1.2em)[(\_, c) $in$ P] c >= coperti
-//     \
-//     \
-//     }
-//   ]
-// )

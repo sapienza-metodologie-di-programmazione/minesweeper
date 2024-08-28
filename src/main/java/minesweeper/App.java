@@ -7,7 +7,3 @@ public class App {
         new Controller(new minesweeper.model.Minesweeper(), new minesweeper.view.Minesweeper());
     }
 }
-
-// new minesweeper.view.Minesweeper(new minesweeper.controller.Controller());
-// new minesweeper.controller.Controller(new minesweeper.model.Game(), new
-// minesweeper.view.Minesweeper)

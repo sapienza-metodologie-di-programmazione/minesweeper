@@ -49,8 +49,3 @@ public class Canvas extends JPanel implements Observer {
     }
 
 }
-
-// switch (tile.kind) {
-// case Empty -> Color.CYAN;
-// case Mine -> Color.MAGENTA;
-// };

@@ -60,7 +60,3 @@ public class Controller {
     }
 
 }
-
-// minesweeper.model.Game game = model.newGame();
-// view.game().canvas().game = Optional.of(game);
-// view.game().canvas().game = Optional.empty();

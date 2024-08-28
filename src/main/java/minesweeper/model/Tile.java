@@ -52,12 +52,3 @@ public class Tile extends Observable {
     }
 
 }
-
-// public enum Kind {
-// Mine,
-// Empty
-// }
-
-// public final Kind kind;
-// Tile(int x, int y, Kind kind) {
-// this.kind = kind;

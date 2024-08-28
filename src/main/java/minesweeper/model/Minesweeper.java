@@ -54,23 +54,3 @@ public class Minesweeper extends Observable implements Observer {
     }
 
 }
-
-// public Game newGame() {
-// Game game = new Game();
-// game.addObserver(this);
-// return game;
-// }
-
-// this.games = games;
-// this.victories = victories;
-
-// import java.util.Optional;
-
-// private Optional<Game> game = Optional.empty();
-// game.ifPresent(Game::end);
-// this.game = Optional.of(game);
-// game = Optional.empty();
-
-// public void endGame() {
-// game.ifPresent(Game::end);
-// }

@@ -27,5 +27,6 @@ replay_pid*
 *.vpp
 
 /target
+/bin
 .settings
 src/test
