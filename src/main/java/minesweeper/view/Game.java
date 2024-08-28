@@ -23,7 +23,7 @@ public class Game extends JPanel implements Observer {
     private Canvas canvas;
     private JButton end;
 
-    public Game(Navigator navigator) {
+    Game(Navigator navigator) {
         setLayout(new BorderLayout());
 
         this.navigator = navigator;

@@ -15,10 +15,10 @@ import javax.swing.SwingConstants;
 @SuppressWarnings("deprecation")
 public class Menu extends JPanel implements Observer {
 
-    JLabel games, victories;
-    JButton play;
+    private JLabel games, victories;
+    private JButton play;
 
-    public Menu(Navigator navigator) {
+    Menu(Navigator navigator) {
         super(new GridBagLayout());
 
         add(new JPanel(new GridBagLayout()) {
