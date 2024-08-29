@@ -15,6 +15,12 @@ import javax.swing.JPanel;
 import minesweeper.model.Game.Result;
 import minesweeper.model.Tile;
 
+/**
+ * The Game class is a view for a Minesweeper game.
+ *
+ * @author Cicio Ionut
+ * @version 1.0
+ */
 @SuppressWarnings("deprecation")
 public class Game extends JPanel implements Observer {
 
@@ -63,14 +69,31 @@ public class Game extends JPanel implements Observer {
         add(canvas = new Canvas(), BorderLayout.CENTER);
     }
 
+    /**
+     * Returns the canvas of the game.
+     *
+     * @return the canvas of the game
+     */
     public Canvas canvas() {
         return canvas;
     }
 
+    /**
+     * Returns the end button of the game.
+     *
+     * @return the end button of the game
+     */
     public JButton end() {
         return end;
     }
 
+    /**
+     * Updates when notified by a game.
+     *
+     * @param o   the game
+     * @param arg either the result of the game, a duration, a tile or the game
+     *            itself
+     */
     @Override
     public void update(Observable o, Object arg) {
         if (!(o instanceof minesweeper.model.Game game))

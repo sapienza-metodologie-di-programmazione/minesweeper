@@ -12,12 +12,24 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
+/**
+ * The Menu class is used to start a Minesweeper game.
+ *
+ * @author Cicio Ionut
+ * @version 1.0
+ */
 @SuppressWarnings("deprecation")
 public class Menu extends JPanel implements Observer {
 
     private JLabel games, victories;
     private JButton play;
 
+    /**
+     * Class constructor specifying the navigator used to change the screen of the
+     * game.
+     *
+     * @param navigator the navigator used to change the screen of the game
+     */
     Menu(Navigator navigator) {
         super(new GridBagLayout());
 
@@ -55,10 +67,21 @@ public class Menu extends JPanel implements Observer {
         });
     }
 
+    /**
+     * Returns the play button.
+     *
+     * @return the play button
+     */
     public JButton play() {
         return play;
     }
 
+    /**
+     * Updates when notified by Minesweeper.
+     *
+     * @param o   the Minesweeper
+     * @param arg not relevant
+     */
     @Override
     public void update(Observable o, Object arg) {
         if (o instanceof minesweeper.model.Minesweeper minesweeper) {

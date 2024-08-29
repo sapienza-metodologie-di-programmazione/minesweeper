@@ -12,9 +12,21 @@ import java.util.stream.Stream;
 
 import minesweeper.model.Tile.Visibility;
 
+/**
+ * The Game class represents a Minesweeper game.
+ *
+ * @author Cicio Ionut
+ * @version 1.0
+ */
 @SuppressWarnings("deprecation")
 public class Game extends Observable implements Observer {
 
+    /**
+     * The Result enum represents the possible results of a game.
+     *
+     * @author Cicio Ionut
+     * @version 1.0
+     */
     public enum Result {
         Loss, Victory, Terminated
     }
@@ -24,6 +36,9 @@ public class Game extends Observable implements Observer {
     public final Tile[] tiles = new Tile[100];
     private Duration duration = Duration.ofSeconds(0);
 
+    /**
+     * Class constructor.
+     */
     public Game() {
         Random random = new Random();
 
@@ -54,30 +69,55 @@ public class Game extends Observable implements Observer {
                 .map(p -> tiles[p[1] * 10 + p[0]]);
     }
 
+    /**
+     * Returns the number of flags placed on the tiles.
+     *
+     * @return the number of flags placed on the tiles
+     */
     public int flags() {
         return flags;
     }
 
+    /**
+     * Returns the duration of the game.
+     *
+     * @return the duration of the game
+     */
     public Duration duration() {
         return duration;
     }
 
+    /**
+     * Notifies all listeners that the game has started (in order to reset).
+     */
     public void start() {
         setChanged();
         notifyObservers(this);
     }
 
+    /**
+     * Updates the duration of the game.
+     */
     public void update() {
         setChanged();
         notifyObservers(duration = duration.plusSeconds(1));
     }
 
+    /**
+     * Notifies all listeners that the game has ended.
+     */
     public void end() {
         setChanged();
         notifyObservers(Terminated);
         deleteObservers();
     }
 
+    /**
+     * Updates when notified by a tile.
+     *
+     * @param o   the tile
+     * @param arg the visibility of the tile
+     */
     @Override
     public void update(Observable o, Object arg) {
         if (!(o instanceof Tile tile && arg instanceof Visibility visibility))

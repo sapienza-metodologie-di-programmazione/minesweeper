@@ -12,12 +12,21 @@ import minesweeper.model.Game;
 
 import minesweeper.view.Canvas;
 
+/**
+ * The Minesweeper view controller.
+ *
+ * @author Cicio Ionut
+ * @version 1.0
+ */
 @SuppressWarnings("deprecation")
 public class Controller {
     private Optional<ScheduledFuture<?>> timer;
     private ScheduledExecutorService scheduler;
     private Optional<Game> game;
 
+    /**
+     * Class constructor.
+     */
     public Controller(minesweeper.model.Minesweeper model, minesweeper.view.Minesweeper view) {
         scheduler = Executors.newScheduledThreadPool(1);
         model.addObserver(view.menu());

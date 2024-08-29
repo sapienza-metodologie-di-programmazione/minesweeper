@@ -10,6 +10,12 @@ import javax.swing.JPanel;
 import minesweeper.model.Tile;
 import minesweeper.model.Game;
 
+/**
+ * The Canvas class is used to draw a Minesweeper game.
+ *
+ * @author Cicio Ionut
+ * @version 1.0
+ */
 @SuppressWarnings("deprecation")
 public class Canvas extends JPanel implements Observer {
     public static final int SCALE = 30;
@@ -42,6 +48,12 @@ public class Canvas extends JPanel implements Observer {
         });
     }
 
+    /**
+     * Updates when notified by a game.
+     *
+     * @param o   the game
+     * @param arg the result of the game
+     */
     @Override
     public void update(Observable o, Object arg) {
         if (o instanceof minesweeper.model.Game game)
