@@ -21,9 +21,22 @@ public class Minesweeper extends Observable implements Observer {
     private int games = 0, victories = 0;
 
     /**
-     * Class constructor.
+     * Class constructor. Call
+     * 
+     * <pre>
+     * Minesweeper::load
+     * </pre>
+     * 
+     * after constructing the object to
+     * load stats.
      */
     public Minesweeper() {
+    }
+
+    /**
+     * Loads stats from file and notifies observers.
+     */
+    public void load() {
         try {
             ObjectInputStream stream = new ObjectInputStream(new FileInputStream(DATABASE));
             this.games = (Integer) stream.readObject();
@@ -31,6 +44,9 @@ public class Minesweeper extends Observable implements Observer {
             stream.close();
         } catch (IOException | ClassNotFoundException e) {
         }
+
+        setChanged();
+        notifyObservers();
     }
 
     /**

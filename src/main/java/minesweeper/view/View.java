@@ -15,7 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 
 @SuppressWarnings("deprecation")
-public class Minesweeper extends JFrame implements Observer {
+public class View extends JFrame implements Observer {
     static Font FONT = new Font("Cascadia Code", Font.PLAIN, 14);
     static String LOGO = "https://static.wikia.nocookie.net/logopedia/images/9/98/Minesweeper_1992.png/revision/latest?cb=20220716174154";
 
@@ -35,9 +35,12 @@ public class Minesweeper extends JFrame implements Observer {
 
     private JPanel deck;
     private Menu menu;
-    private Game game;
+    private Play play;
 
-    public Minesweeper() {
+    /**
+     * Class constructor. Call
+     */
+    public View() {
         super("Minesweeper");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         try {
@@ -51,7 +54,7 @@ public class Minesweeper extends JFrame implements Observer {
         add(deck = new JPanel(new CardLayout()) {
             {
                 add(menu = new Menu(navigator), Screen.Menu.name());
-                add(game = new Game(navigator), Screen.Game.name());
+                add(play = new Play(navigator), Screen.Game.name());
 
                 add(new JPanel(new GridBagLayout()) {
                     {
@@ -84,14 +87,30 @@ public class Minesweeper extends JFrame implements Observer {
         setVisible(true);
     }
 
+    /**
+     * Returns the menu panel.
+     *
+     * @return the menu panel.
+     */
     public Menu menu() {
         return menu;
     }
 
-    public Game game() {
-        return game;
+    /**
+     * Returns the play panel.
+     *
+     * @return the play panel.
+     */
+    public Play play() {
+        return play;
     }
 
+    /**
+     * Updates when notified by a navigator.
+     *
+     * @param o   the navigator
+     * @param arg the screen to navigate to.
+     */
     @Override
     public void update(Observable o, Object arg) {
         if (o instanceof Navigator && arg instanceof Screen screen)

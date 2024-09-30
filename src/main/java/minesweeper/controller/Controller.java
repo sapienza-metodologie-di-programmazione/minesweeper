@@ -9,8 +9,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import minesweeper.model.Game;
-
+import minesweeper.model.Minesweeper;
 import minesweeper.view.Canvas;
+import minesweeper.view.View;
 
 /**
  * The Minesweeper view controller.
@@ -27,31 +28,33 @@ public class Controller {
     /**
      * Class constructor.
      */
-    public Controller(minesweeper.model.Minesweeper model, minesweeper.view.Minesweeper view) {
+    public Controller(Minesweeper model, View view) {
         scheduler = Executors.newScheduledThreadPool(1);
         model.addObserver(view.menu());
+        model.load();
 
         view.menu().play().addActionListener(e -> {
             Game game = new Game();
+
             game.addObserver(model);
-            game.addObserver(view.game());
-            game.addObserver(view.game().canvas());
+            game.addObserver(view.play());
+            game.addObserver(view.play().canvas());
             game.start();
 
             this.game = Optional.of(game);
             timer = Optional.of(scheduler.scheduleAtFixedRate(() -> game.update(), 1, 1, TimeUnit.SECONDS));
         });
 
-        view.game().end().addActionListener(e -> {
+        view.play().end().addActionListener(e -> {
             timer.ifPresent(t -> t.cancel(true));
             game.ifPresent(Game::end);
         });
 
-        view.game().canvas().addMouseListener(new MouseAdapter() {
+        view.play().canvas().addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 game.ifPresent(game -> {
-                    Canvas canvas = view.game().canvas();
+                    Canvas canvas = view.play().canvas();
 
                     int x = (e.getX() - canvas.getWidth() / 2 + 5 * Canvas.SCALE) / 30;
                     int y = (e.getY() - canvas.getHeight() / 2 + 5 * Canvas.SCALE) / 30;

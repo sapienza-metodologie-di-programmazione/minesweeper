@@ -27,7 +27,7 @@ public class Canvas extends JPanel implements Observer {
 
         game.ifPresent(game -> {
             g.translate(this.getWidth() / 2 - 5 * SCALE, this.getHeight() / 2 - 5 * SCALE);
-            g.setFont(Minesweeper.FONT);
+            g.setFont(View.FONT);
 
             for (Tile tile : game.tiles) {
                 g.setColor(switch (tile.visibility()) {

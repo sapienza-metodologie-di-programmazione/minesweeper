@@ -5,17 +5,17 @@
 
 ## Analisi
 
-Di seguito i diagrammi sviluppati durante l'analisi. Per l'analisi più completa consultare la [specifica di progetto](https://github.com/CuriousCI/minesweeper/blob/main/docs/main.pdf).
+Di seguito i diagrammi sviluppati durante l'analisi del gioco. Per l'analisi più completa consultare la [specifica di progetto](https://github.com/CuriousCI/minesweeper/blob/main/docs/main.pdf).
 
 ### UML ad alto livello
 
-Una prima analisi di alto livello del gioco (eventuali vincoli sui dati e specifiche delle operazioni sono definite nella [specifica di progetto](https://github.com/CuriousCI/minesweeper/blob/main/docs/main.pdf)).
+Modello sviluppato in una prima analisi ad alto livello del gioco (eventuali vincoli sui dati e specifiche delle operazioni sono definite nella [specifica di progetto](https://github.com/CuriousCI/minesweeper/blob/main/docs/main.pdf)).
 
 ![Abstract UML](./docs/Minesweeper.png)
 
 ### UML implementazione 
 
-Modello che riassume l'implementazione del progetto. Per una visione più completa è possibile consultare la [documentazione online](https://curiousci.github.io/minesweeper/) in javadoc.
+Modello che sintetizza l'implementazione del progetto. Per una visione più completa è possibile consultare la [documentazione online](https://curiousci.github.io/minesweeper/) in javadoc.
 
 ![UML](./docs/UML.png)
 

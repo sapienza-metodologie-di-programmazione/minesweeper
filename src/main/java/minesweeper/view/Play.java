@@ -22,14 +22,17 @@ import minesweeper.model.Tile;
  * @version 1.0
  */
 @SuppressWarnings("deprecation")
-public class Game extends JPanel implements Observer {
+public class Play extends JPanel implements Observer {
 
     private JLabel time, flags, mines;
     private Navigator navigator;
     private Canvas canvas;
     private JButton end;
 
-    Game(Navigator navigator) {
+    /**
+     * Class constructor.
+     */
+    Play(Navigator navigator) {
         setLayout(new BorderLayout());
 
         this.navigator = navigator;

@@ -19,7 +19,7 @@
           <artifactId>exec-maven-plugin</artifactId>
           <version>3.3.0</version>
           <configuration>
-            <mainClass>main.minesweeper.App</mainClass>
+            <mainClass>minesweeper.App</mainClass>
             <arguments>
               <argument>--enable-preview</argument>
             </arguments>
