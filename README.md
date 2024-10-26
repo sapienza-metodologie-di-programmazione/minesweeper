@@ -13,11 +13,15 @@ Modello sviluppato in una prima analisi ad alto livello del gioco (eventuali vin
 
 ![Abstract UML](./docs/Minesweeper.png)
 
+> Realizzato con [Visual Paradigm](https://www.visual-paradigm.com/)
+
 ### UML implementazione 
 
-Modello che sintetizza l'implementazione del progetto. Per una visione più completa è possibile consultare la [documentazione online](https://curiousci.github.io/minesweeper/) in javadoc.
+Modello che sintetizza l'implementazione del progetto. È possibile consultare la [documentazione online](https://curiousci.github.io/minesweeper/) in javadoc.
 
 ![UML](./docs/UML.png)
+
+> Realizzato con [Visual Paradigm](https://www.visual-paradigm.com/)
 
 ### Wireframe dell'interfaccia
 
@@ -25,3 +29,4 @@ Breve progetto dell'interfaccia grafica.
 
 ![Wireframe](./docs/wireframe.png)
 
+> Realizzato con [excalidraw](https://excalidraw.com/)

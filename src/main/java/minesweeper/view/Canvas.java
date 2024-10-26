@@ -19,7 +19,7 @@ import minesweeper.model.Game;
 @SuppressWarnings("deprecation")
 public class Canvas extends JPanel implements Observer {
     public static final int SCALE = 30;
-    private Optional<minesweeper.model.Game> game = Optional.empty();
+    private Optional<Game> game = Optional.empty();
 
     @Override
     public void paint(Graphics g) {
@@ -56,7 +56,7 @@ public class Canvas extends JPanel implements Observer {
      */
     @Override
     public void update(Observable o, Object arg) {
-        if (o instanceof minesweeper.model.Game game)
+        if (o instanceof Game game)
             this.game = arg instanceof Game.Result ? Optional.empty() : Optional.of(game);
     }
 
